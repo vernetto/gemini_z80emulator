@@ -1,0 +1,5 @@
+{
+  "name": "Z80 Retro Emulator & Debugger",
+  "description": "A comprehensive Z80 microprocessor emulator featuring a 64KB RAM viewer, register editor, and an integrated assembly editor for debugging and running legacy-style code.",
+  "requestFramePermissions": []
+}
