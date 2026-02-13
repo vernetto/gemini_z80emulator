@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Z80Emulator } from './services/z80';
 import { assemble } from './services/assembler';
@@ -65,7 +64,7 @@ const App: React.FC = () => {
 
   const handleReset = () => {
     handlePause();
-    cpu.loadProgram(0, []); 
+    cpu.loadProgram(0, []);
     cpu.setRegister('pc', 0);
     cpu.setRegister('sp', 0xFFFF);
     cpu.setRegister('a', 0);
@@ -77,7 +76,8 @@ const App: React.FC = () => {
     const { bytes, addressToLineMap: map } = assemble(code);
     cpu.loadProgram(0, bytes);
     setAddressToLineMap(map);
-    setPreviousPC(0);
+    // set previousPC to the current cpu PC (usually 0 after load)
+    setPreviousPC(cpu.getState().registers.pc);
     updateState();
     console.log(`Assembled ${bytes.length} bytes.`);
   };
@@ -98,9 +98,20 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Auto-assemble the initial code on first mount so stepping works immediately
+  useEffect(() => {
+    handleAssemble();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Determine which line is currently being executed
-  // Use previousPC since step() increments PC before returning, so we need to highlight the instruction that just executed
-  const activeLineIndex = addressToLineMap[previousPC] !== undefined ? addressToLineMap[previousPC] : null;
+  // Prefer previousPC (the instruction that just executed) but fall back to current PC
+  const activeLineIndex =
+    addressToLineMap[previousPC] !== undefined
+      ? addressToLineMap[previousPC]
+      : addressToLineMap[state.registers.pc] !== undefined
+      ? addressToLineMap[state.registers.pc]
+      : null;
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto">
@@ -151,6 +162,10 @@ const App: React.FC = () => {
                <div className="text-[11px] text-zinc-400 space-y-2 font-mono">
                  <p><strong className="text-zinc-200">PC:</strong> 0x{state.registers.pc.toString(16).padStart(4, '0').toUpperCase()}</p>
                  <p><strong className="text-zinc-200">Next Opcode:</strong> 0x{state.memory[state.registers.pc].toString(16).padStart(2, '0').toUpperCase()}</p>
+                 <p><strong className="text-zinc-200">Prev PC:</strong> 0x{previousPC.toString(16).padStart(4, '0').toUpperCase()}</p>
+                 <p><strong className="text-zinc-200">Mapped at Prev PC:</strong> {addressToLineMap[previousPC] !== undefined ? (addressToLineMap[previousPC] + 1) : '—'}</p>
+                 <p><strong className="text-zinc-200">Mapped at PC:</strong> {addressToLineMap[state.registers.pc] !== undefined ? (addressToLineMap[state.registers.pc] + 1) : '—'}</p>
+                 <p><strong className="text-zinc-200">Mapped Bytes:</strong> {Object.keys(addressToLineMap).length}</p>
                  <div className="mt-6 p-2 bg-black border border-zinc-800 rounded text-green-600">
                     &gt; LOG: {activeLineIndex !== null ? `Executing line ${activeLineIndex + 1}` : 'CPU ready.'}
                  </div>

@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 
 interface CodeEditorProps {
@@ -33,7 +32,12 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     if (activeLineIndex !== null && activeLineIndex >= 0 && textareaRef.current) {
       const lineHeight = 1.25 * 16; // 1.25rem in pixels (assuming 16px base)
       const targetScrollTop = activeLineIndex * lineHeight - 100; // Center line with some offset
-      textareaRef.current.scrollTop = Math.max(0, targetScrollTop);
+      const newScrollTop = Math.max(0, targetScrollTop);
+      textareaRef.current.scrollTop = newScrollTop;
+      // Also sync gutter scroll so the arrow remains visible
+      if (gutterRef.current) {
+        gutterRef.current.scrollTop = newScrollTop;
+      }
     }
   }, [activeLineIndex]);
 
@@ -61,7 +65,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         {/* Gutter with Line Numbers and Pointer */}
         <div 
           ref={gutterRef}
-          className="w-12 bg-zinc-950 border-r border-zinc-800 flex flex-col font-mono text-[10px] text-zinc-600 select-none overflow-visible pt-4"
+          className="w-12 bg-zinc-950 border-r border-zinc-800 flex flex-col font-mono text-[10px] text-zinc-600 select-none overflow-auto pt-4"
         >
           {lines.map((_, i) => (
             <div key={i} className="h-[1.25rem] flex items-center justify-end pr-1 relative">
