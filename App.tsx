@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [code, setCode] = useState(INITIAL_CODE);
   const [isRunning, setIsRunning] = useState(false);
   const [addressToLineMap, setAddressToLineMap] = useState<Record<number, number>>({});
+  const [previousPC, setPreviousPC] = useState<number>(0);
   const runInterval = useRef<number | null>(null);
 
   const updateState = useCallback(() => {
@@ -35,6 +36,7 @@ const App: React.FC = () => {
   }, [cpu]);
 
   const handleStep = useCallback(() => {
+    setPreviousPC(cpu.getState().registers.pc);
     cpu.step();
     updateState();
   }, [cpu, updateState]);
@@ -44,6 +46,7 @@ const App: React.FC = () => {
     setIsRunning(true);
     runInterval.current = window.setInterval(() => {
       // Execute steps
+      setPreviousPC(cpu.getState().registers.pc);
       for (let i = 0; i < 50; i++) {
         cpu.step();
       }
@@ -74,6 +77,7 @@ const App: React.FC = () => {
     const { bytes, addressToLineMap: map } = assemble(code);
     cpu.loadProgram(0, bytes);
     setAddressToLineMap(map);
+    setPreviousPC(0);
     updateState();
     console.log(`Assembled ${bytes.length} bytes.`);
   };
@@ -95,8 +99,8 @@ const App: React.FC = () => {
   }, []);
 
   // Determine which line is currently being executed
-  const currentPC = state.registers.pc;
-  const activeLineIndex = addressToLineMap[currentPC] !== undefined ? addressToLineMap[currentPC] : null;
+  // Use previousPC since step() increments PC before returning, so we need to highlight the instruction that just executed
+  const activeLineIndex = addressToLineMap[previousPC] !== undefined ? addressToLineMap[previousPC] : null;
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col gap-6 max-w-7xl mx-auto">

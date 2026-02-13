@@ -28,6 +28,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     }
   };
 
+  // Auto-scroll to active line when stepping
+  useEffect(() => {
+    if (activeLineIndex !== null && activeLineIndex >= 0 && textareaRef.current) {
+      const lineHeight = 1.25 * 16; // 1.25rem in pixels (assuming 16px base)
+      const targetScrollTop = activeLineIndex * lineHeight - 100; // Center line with some offset
+      textareaRef.current.scrollTop = Math.max(0, targetScrollTop);
+    }
+  }, [activeLineIndex]);
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 flex flex-col h-full shadow-2xl">
       <div className="flex justify-between items-center mb-4">
@@ -52,14 +61,14 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         {/* Gutter with Line Numbers and Pointer */}
         <div 
           ref={gutterRef}
-          className="w-10 bg-zinc-950 border-r border-zinc-800 flex flex-col font-mono text-[10px] text-zinc-600 select-none overflow-hidden pt-4"
+          className="w-12 bg-zinc-950 border-r border-zinc-800 flex flex-col font-mono text-[10px] text-zinc-600 select-none overflow-visible pt-4"
         >
           {lines.map((_, i) => (
-            <div key={i} className="h-[1.25rem] flex items-center justify-center relative">
+            <div key={i} className="h-[1.25rem] flex items-center justify-end pr-1 relative">
               {activeLineIndex === i && (
-                <span className="absolute left-0 text-green-500 font-bold text-[12px] animate-pulse">▶</span>
+                <span className="text-green-500 font-bold text-[14px] animate-pulse mr-1">▶</span>
               )}
-              {i + 1}
+              <span className={activeLineIndex === i ? 'text-green-500' : ''}>{i + 1}</span>
             </div>
           ))}
         </div>

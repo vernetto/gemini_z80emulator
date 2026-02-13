@@ -20,17 +20,16 @@ export const assemble = (code: string): AssemblyResult => {
   let currentAddress = 0;
 
   lines.forEach((line, lineIndex) => {
-    const clean = line.trim().toUpperCase().split(';')[0];
+    const clean = line.trim().toUpperCase().split(';')[0].trim();
     if (!clean) {
-      // Still map empty lines to the current address to prevent "jumping"
-      // but usually we only map functional lines
+      // Skip empty or comment-only lines
       return;
     }
 
     const startAddr = currentAddress;
     const parts = clean.split(/\s+/);
     const inst = parts[0];
-    const args = parts.slice(1).join('').split(',');
+    const args = parts.slice(1).join('').split(',').map(a => a.trim());
 
     let bytesForThisLine: number[] = [];
 
